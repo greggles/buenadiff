@@ -1,0 +1,2 @@
+URL,FILENAME,XPATH
+"https://www.example.com/",homepage,".//p[]"

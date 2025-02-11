@@ -1,0 +1,62 @@
+name: Downloads web pages, distills them to text, and compares revisions of them.
+
+on:
+  # Run this workflow manually from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      jobAction:
+        description: 'Action to take'
+        required: true
+        default: 'compare'
+        type: choice
+        options:
+          - compare
+          - create_reference
+
+  schedule:
+    # Daily at 4:11 AM in Denver winters / 5:11AM in summer, 11AM UTC.
+    # TODO: you might want to run this more often, like daily.
+    - cron: '11 11 11 * *'
+
+# Since we want to commit the resulting html.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Get updated copies of the html pages
+        if: ${{ inputs.jobAction != 'create_reference' }}
+        run: ./curler.sh  url_data.csv
+
+      - name: Distill the html down to text.
+        run: |
+          pip install beautifulsoup4
+          pip install lxml
+          python distill-html.py
+
+      - name: Compare the resulting text.
+        # Any diffs (exit code failure) in here will not stop overall script processing.
+        run: ./differ.sh url_data.csv
+
+      - name: Store a reference point.
+        # Only run this step if the create_reference option was manually selected.
+        if: ${{ inputs.jobAction == 'create_reference' }}
+        run: |
+          cp working-copy/*.html reference/
+
+        # The chained git diff part will only commit/push if there are changes.
+      - name: Commit changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add working-copy/ reference/
+          git diff --quiet && git diff --staged --quiet || git commit -am "Updating html pages and distilled txt" && git push

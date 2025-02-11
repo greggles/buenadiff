@@ -1,0 +1,41 @@
+name: Downloads a single web page and adds it to the reference.
+
+on:
+  # Run this workflow manually from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      urlToDownload:
+        description: 'URL to download'
+        required: true
+        type: string
+      fileName:
+        description: 'The file name, e.g. homepage.html'
+        required: true
+        type: string
+
+# Since we want to commit the resulting html.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Get an updated copy of the html page
+        run: | 
+          curl ${{ inputs.urlToDownload }} -o reference/${{ inputs.fileName }}
+
+        # The chained git diff part will only commit/push if there are changes.
+      - name: Commit changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add working-copy/ reference/
+          git diff --quiet && git diff --staged --quiet || git commit -am "Updating single html reference page" && git push
