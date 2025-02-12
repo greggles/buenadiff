@@ -39,7 +39,7 @@ Or if you are adding a lot of new html files you can use the `curler.sh` script 
 1. Click to "Actions"
 2. Click "Run workflow" choosing to "compare"
 3. Review the diff - if there are changes you are handling you can create a new reference point
-4. Click "Run workflow" choosing to "create_reference"
+4. To create a new reference point (less common) Click "Run workflow" choosing to "create_reference"
 
 ## Folder structure:
 * `reference/` is the historical copy of the site that is in a specific state.
@@ -50,13 +50,9 @@ Pages are "committed" with each run of the tool in the working-copy directory. W
 
 Consider scheduling runs regularly by modifying the `.github/workflows/CHANGETHIS.yml` and adding a `schedule` trigger at a frequency like daily:
 
-```commandline
+```
 on:
   schedule:
     # Daily at 5:30 in UTC.
     - cron: '30 5 * * *'
 ```
-
-
-TODO:
-1. Track HTML changes in the Xpath. If a link or a font treatment changes on one page that fact needs to be updated in the other language.
