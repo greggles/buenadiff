@@ -1,7 +1,10 @@
 #!/bin/bash
 set -uex
 
-# Check if a filename is provided as an argument
+# Deletes out files that accumulate during normal operation of the tool.
+# Useful to get back to a clean state.
+
+# This required argument helps ensure the script is only run intentionally.
 if [ $# -eq 0 ]; then
   echo "Usage: $0 deletemystuff"
   exit 1
